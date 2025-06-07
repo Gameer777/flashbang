@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Click Me Nerd</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            background: black;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            transition: background-color 0.1s ease;
+        }
+
+        .content {
+            text-align: center;
+            z-index: 10;
+        }
+
+        .trigger-link {
+            color: #00ff00;
+            font-size: 24px;
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 20px;
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            transition: all 0.3s ease;
+        }
+
+        .trigger-link:hover {
+            background: rgba(0, 255, 0, 0.1);
+            color: #ffffff;
+            border-color: #ffffff;
+        }
+
+        .instructions {
+            color: #888;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+
+        /* Animation classes */
+        .flash-animation {
+            animation: flashEffect 2s ease-in-out;
+        }
+
+        @keyframes flashEffect {
+            0% { background: #000000; }
+            10% { background: #ffffff; }
+            20% { background: #000000; }
+            30% { background: #ffffff; }
+            40% { background: #000000; }
+            50% { background: #ffffff; }
+            60% { background: #000000; }
+            70% { background: #ffffff; }
+            80% { background: #000000; }
+            90% { background: #ffffff; }
+            100% { background: #000000; }
+        }
+
+        /* Hide content during animation */
+        .flash-animation .content {
+            opacity: 0;
+        }
+
+        .reset-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: rgba(128, 128, 128, 0.8);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .reset-btn.show {
+            opacity: 1;
+        }
+
+        .reset-btn:hover {
+            background: rgba(128, 128, 128, 1);
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <div class="trigger-link" id="triggerLink">
+            Click Me Nerd
+        </div>
+        <div class="instructions">
+         
+        </div>
+    </div>
+
+    <button class="reset-btn" id="resetBtn">Reset</button>
+
+    <script>
+        let audioContext;
+        let oscillator;
+        let gainNode;
+        let isAnimating = false;
+
+        const triggerLink = document.getElementById('triggerLink');
+        const resetBtn = document.getElementById('resetBtn');
+        const body = document.body;
+
+        // Trigger animation on link click
+        triggerLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            if (isAnimating) return; // Prevent multiple triggers
+            
+            triggerFlashEffect();
+        });
+
+        // Reset button
+        resetBtn.addEventListener('click', function() {
+            resetPage();
+        });
+
+        function triggerFlashEffect() {
+            isAnimating = true;
+            
+            // Start audio
+            startAudio();
+            
+            // Add animation class
+            body.classList.add('flash-animation');
+            
+            // Show reset button
+            resetBtn.classList.add('show');
+            
+            // Remove animation class after completion
+            setTimeout(() => {
+                body.classList.remove('flash-animation');
+                stopAudio();
+                isAnimating = false;
+            }, 2000);
+        }
+
+        function startAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Create oscillator for high-pitched ringing
+                oscillator = audioContext.createOscillator();
+                gainNode = audioContext.createGain();
+                
+                // High-pitched frequency for ringing effect
+                oscillator.frequency.setValueAtTime(2800, audioContext.currentTime);
+                oscillator.type = 'sine';
+                
+                // Set volume
+                gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+                
+                // Connect nodes
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Start the oscillator
+                oscillator.start();
+                
+                // Add frequency modulation for realistic ringing
+                const lfo = audioContext.createOscillator();
+                const lfoGain = audioContext.createGain();
+                
+                lfo.frequency.setValueAtTime(8, audioContext.currentTime);
+                lfo.type = 'sine';
+                lfoGain.gain.setValueAtTime(100, audioContext.currentTime);
+                
+                lfo.connect(lfoGain);
+                lfoGain.connect(oscillator.frequency);
+                lfo.start();
+                
+            } catch (error) {
+                console.error('Audio not supported:', error);
+            }
+        }
+
+        function stopAudio() {
+            if (oscillator) {
+                try {
+                    oscillator.stop();
+                } catch (error) {
+                    // Oscillator may already be stopped
+                }
+                oscillator = null;
+            }
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+        }
+
+        function resetPage() {
+            body.classList.remove('flash-animation');
+            resetBtn.classList.remove('show');
+            stopAudio();
+            isAnimating = false;
+        }
+
+        // Clean up audio when page is unloaded
+        window.addEventListener('beforeunload', stopAudio);
+    </script>
+</body>
+</html>
