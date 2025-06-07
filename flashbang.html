@@ -166,11 +166,11 @@
                 gainNode = audioContext.createGain();
                 
                 // High-pitched frequency for ringing effect
-                oscillator.frequency.setValueAtTime(2800, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(5000, audioContext.currentTime);
                 oscillator.type = 'sine';
                 
                 // Set volume
-                gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+                gainNode.gain.setValueAtTime(1, audioContext.currentTime);
                 
                 // Connect nodes
                 oscillator.connect(gainNode);
