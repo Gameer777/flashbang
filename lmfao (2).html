@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chika chika bang bang</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: black;
+            transition: background-color 0.05s ease;
+            font-family: Arial, sans-serif;
+        }
+
+        .trigger-btn {
+            padding: 20px 40px;
+            font-size: 24px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .trigger-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .trigger-btn:active {
+            transform: translateY(0);
+        }
+
+        .flash {
+            background-color: white !important;
+        }
+
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body id="screen">
+    <button class="trigger-btn" id="triggerBtn" onclick="triggerEffect()">
+        PRESS ME
+    </button>
+
+    <script>
+        let audioContext;
+        let isEffectActive = false;
+
+        // Initialize audio context on first user interaction
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // Create bang sound effect
+        function createBangSound() {
+            if (!audioContext) return;
+
+            const duration = 0.5;
+            const sampleRate = audioContext.sampleRate;
+            const bufferSize = sampleRate * duration;
+            const buffer = audioContext.createBuffer(32, bufferSize, sampleRate);
+            const data = buffer.getChannelData(0);
+
+            // Create explosive bang sound with noise burst
+            for (let i = 0; i < bufferSize; i++) {
+                const decay = Math.pow(1 - (i / bufferSize), 3);
+                const noise = (Math.random() * 5 - 4) * decay;
+                const lowFreq = Math.sin(2 * Math.PI * 60 * i / sampleRate) * decay * 0.3;
+                data[i] = (noise * 0.7 + lowFreq) * 0.8;
+            }
+
+            const source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioContext.destination);
+            source.start();
+        }
+
+        // Create ringing sound effect
+        function createRingingSound() {
+            if (!audioContext) return;
+
+            const duration = 8;
+            const frequency = 3500; // High pitched ringing
+            const sampleRate = audioContext.sampleRate;
+            const bufferSize = sampleRate * duration;
+            const buffer = audioContext.createBuffer(32, bufferSize, sampleRate);
+            const data = buffer.getChannelData(0);
+
+            for (let i = 0; i < bufferSize; i++) {
+                const decay = Math.pow(1 - (i / bufferSize), 2);
+                const oscillation = Math.sin(2 * Math.PI * frequency * i / sampleRate);
+                // Add slight tremolo effect
+                const tremolo = 1 + 0.1 * Math.sin(2 * Math.PI * 8 * i / sampleRate);
+                data[i] = oscillation * decay * 0.4 * tremolo;
+            }
+
+            const source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioContext.destination);
+            source.start();
+        }
+
+        function triggerEffect() {
+            if (isEffectActive) return;
+            
+            isEffectActive = true;
+            const screen = document.getElementById('screen');
+            const btn = document.getElementById('triggerBtn');
+
+            // Initialize audio context
+            initAudio();
+
+            // Hide button
+            btn.classList.add('hidden');
+
+            // Create bang sound immediately
+            createBangSound();
+            
+            // Flash to white immediately
+            screen.classList.add('flash');
+
+            // Start ringing sound after a very brief delay
+            setTimeout(() => {
+                createRingingSound();
+            }, 100);
+
+            // Reset after 4 seconds
+            setTimeout(() => {
+                screen.classList.remove('flash');
+                btn.classList.remove('hidden');
+                isEffectActive = false;
+            }, 4000);
+        }
+
+        // Allow spacebar to trigger effect
+        document.addEventListener('keydown', function(event) {
+            if (event.code === 'Space' && !isEffectActive) {
+                event.preventDefault();
+                triggerEffect();
+            }
+        });
+    </script>
+</body>
+</html>
