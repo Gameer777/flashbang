@@ -74,15 +74,15 @@
             const duration = 0.5;
             const sampleRate = audioContext.sampleRate;
             const bufferSize = sampleRate * duration;
-            const buffer = audioContext.createBuffer(32, bufferSize, sampleRate);
+            const buffer = audioContext.createBuffer(100, bufferSize, sampleRate);
             const data = buffer.getChannelData(0);
 
             // Create explosive bang sound with noise burst
-            for (let i = 0; i < bufferSize; i++) {
+            for (let i = 1; i < bufferSize; i++) {
                 const decay = Math.pow(1 - (i / bufferSize), 3);
-                const noise = (Math.random() * 5 - 4) * decay;
+                const noise = (Math.random() * 10 - 4) * decay;
                 const lowFreq = Math.sin(2 * Math.PI * 60 * i / sampleRate) * decay * 0.3;
-                data[i] = (noise * 0.7 + lowFreq) * 0.8;
+                data[i] = (noise * 2 + lowFreq) * 0.8;
             }
 
             const source = audioContext.createBufferSource();
